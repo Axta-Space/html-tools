@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>axta tools</title>
+  <style>
+    :root {
+      --bg: #f8f8f6;
+      --surface: #ffffff;
+      --border: #e8e8e4;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --text-muted: #a0a0a0;
+      --accent: #1a6ef5;
+      --accent-dim: #e8f0fe;
+      --tag-bg: #f0f0ec;
+      --radius: 12px;
+      --font: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+    }
+
+    header {
+      padding: 48px 24px 32px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .wordmark {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: lowercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .wordmark span {
+      color: var(--accent);
+    }
+
+    h1 {
+      font-size: clamp(28px, 6vw, 38px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--text-primary);
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-left: 2px;
+    }
+
+    .tool-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .tool-card {
+      display: block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .tool-card:active {
+      transform: scale(0.985);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    @media (hover: hover) {
+      .tool-card:hover {
+        border-color: var(--accent);
+        box-shadow: 0 2px 12px rgba(26,110,245,0.08);
+      }
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .tool-name {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .tool-name .prefix {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .tool-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: var(--tag-bg);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tool-badge.linked {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .tool-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .arrow {
+      display: inline-block;
+      margin-left: 4px;
+      opacity: 0.4;
+      font-size: 12px;
+    }
+
+    .empty-state {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .empty-state code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--tag-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    footer {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .footer-link {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      touch-action: manipulation;
+    }
+
+    .footer-link:active { color: var(--accent); }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <div class="wordmark"><span>axta</span> · engineering tools</div>
+    <h1>html tools <em>/</em></h1>
+    <p class="subtitle">Lightweight satcom tools. Single-file HTML, no install required.</p>
+  </header>
+
+  <main>
+
+    <div class="section-label">Tools</div>
+    <div class="tool-grid" id="tools">
+
+      <!-- Add tool cards here as tools are added. Example:
+      <a class="tool-card" href="./d3-globe/">
+        <div class="card-top">
+          <div class="tool-name"><span class="prefix">axta</span>GLOBE</div>
+          <div class="tool-badge linked">AxtaLINK</div>
+        </div>
+        <div class="tool-desc">Interactive orthographic globe with beam coverage visualization and draggable beam positioning.</div>
+      </a>
+      -->
+
+      <div class="empty-state">
+        No tools yet — file a GitHub issue with <code>@claude</code> to add one.
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-text">dbetts-dev / html-tools</span>
+    <a class="footer-link" href="https://github.com/dbetts-dev/html-tools" target="_blank">github ↗</a>
+  </footer>
+
+</body>
+</html>
