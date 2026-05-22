@@ -60,6 +60,8 @@ Each tool subfolder may have a `README.md` describing its purpose, inputs, and a
 
 ## GitHub workflow
 
+- **Repo**: `https://github.com/dbetts-dev/html-tools`
+- **Pages URL**: `https://dbetts-dev.github.io/html-tools/`
 - **Issues**: describe the feature or bug. Use `@claude` to trigger Claude Code Action.
 - **PRs**: Claude creates a draft PR. Review the diff + GitHub Pages preview on `main` after merge.
 - **Commit messages**: `feat(tool-name): description` or `fix(tool-name): description`.
