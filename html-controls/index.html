@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML Controls Field Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #f0f2f6;
+    --surface: #ffffff;
+    --surface2: #e8ebf2;
+    --border: #d4d9e8;
+    --border-focus: #4a74e8;
+    --accent: #4a74e8;
+    --accent2: #d94f6e;
+    --accent3: #1a9e7a;
+    --accent4: #c97010;
+    --text: #1a1f36;
+    --muted: #7a839e;
+    --label: #4a5368;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-focus: 0 0 0 3px rgba(74,116,232,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html {
+    background: #f0f2f6;
+  }
+
+  body {
+    background: #f0f2f6;
+    color: #1a1f36;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* Sticky header band so it's never lost */
+  header {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 32px 24px 28px;
+    margin-bottom: 32px;
+  }
+  header .inner {
+    max-width: 960px;
+    margin: 0 auto;
+    border-left: 4px solid var(--accent);
+    padding-left: 18px;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: #1a1f36;
+  }
+  header p { margin-top: 8px; color: var(--muted); font-size: 0.9rem; }
+
+  .grid {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    padding: 0 16px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-wide { grid-column: 1 / -1; }
+
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem; font-weight: 500;
+    color: var(--accent); letter-spacing: 0.09em; text-transform: uppercase;
+  }
+  .card-num {
+    font-family: 'DM Mono', monospace; font-size: 0.66rem;
+    color: var(--muted); background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px;
+    flex-shrink: 0;
+  }
+  .card-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+  .demo { display: flex; flex-direction: column; gap: 9px; }
+  .sublabel { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.03em; margin-bottom: -3px; }
+
+  /* ── Base input ── */
+  .inp {
+    width: 100%; background: var(--surface);
+    border: 1.5px solid var(--border); border-radius: 9px;
+    padding: 10px 13px; color: var(--text); outline: none;
+    box-shadow: var(--shadow); font-size: 0.9rem;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-appearance: none; appearance: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .inp:focus { border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+  .inp::placeholder { color: var(--muted); }
+
+  /* ── 2. Password ── */
+  .inp-wrap { position: relative; }
+  .inp-wrap .inp { padding-right: 42px; }
+  .eye {
+    position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; padding: 0; font-size: 1rem;
+  }
+
+  /* ── 3. Search ── */
+  .search-wrap { position: relative; }
+  .search-wrap .inp { padding-left: 34px; }
+  .search-icon {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 0.9rem; pointer-events: none;
+  }
+
+  /* ── 4. Number stepper ── */
+  .number-ctrl {
+    display: flex; align-items: stretch;
+    border: 1.5px solid var(--border); border-radius: 9px; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .number-ctrl input {
+    flex: 1; text-align: center; background: var(--surface);
+    border: none; padding: 10px 4px; color: var(--text);
+    outline: none; font-size: 0.95rem;
+    -webkit-appearance: none; appearance: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .num-btn {
+    background: var(--surface2); border: none; color: var(--label);
+    width: 44px; cursor: pointer; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s; flex-shrink: 0;
+  }
+  .num-btn:active { background: var(--border); }
+
+  /* ── 5. Textarea ── */
+  .textarea {
+    width: 100%; background: var(--surface);
+    border: 1.5px solid var(--border); border-radius: 9px;
+    padding: 10px 13px; color: var(--text); outline: none;
+    resize: vertical; min-height: 78px; line-height: 1.5;
+    font-size: 0.9rem; box-shadow: var(--shadow);
+    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-appearance: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .textarea:focus { border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+  .textarea::placeholder { color: var(--muted); }
+
+  /* ── 6. Select ── */
+  .select-wrap { position: relative; }
+  .sel {
+    width: 100%; background: var(--surface);
+    border: 1.5px solid var(--border); border-radius: 9px;
+    padding: 10px 36px 10px 13px; color: var(--text);
+    outline: none; -webkit-appearance: none; appearance: none;
+    cursor: pointer; box-shadow: var(--shadow); font-size: 0.9rem;
+    transition: border-color 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .sel:focus { border-color: var(--border-focus); }
+  .select-wrap::after {
+    content: '▾'; position: absolute; right: 13px; top: 50%;
+    transform: translateY(-50%); color: var(--muted); pointer-events: none;
+    font-size: 0.85rem;
+  }
+
+  /* ── 7. Checkbox ── */
+  .check-row {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; font-size: 0.88rem; color: var(--label);
+  }
+  .check-row input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+
+  /* ── 8. Radio ── */
+  .radio-group { display: flex; flex-direction: column; gap: 9px; }
+  .radio-row {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; font-size: 0.88rem; color: var(--label);
+  }
+  .radio-row input[type=radio] { width: 17px; height: 17px; accent-color: var(--accent2); cursor: pointer; flex-shrink: 0; }
+
+  /* ── 9. Toggle ── */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
+  .toggle-label { font-size: 0.88rem; color: var(--label); }
+  .toggle { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-track {
+    position: absolute; inset: 0; border-radius: 999px;
+    background: #c4cad8; cursor: pointer;
+    transition: background 0.22s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--accent3); }
+  .toggle-track::after {
+    content: ''; position: absolute;
+    top: 3px; left: 3px; width: 20px; height: 20px;
+    border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.28);
+    transition: transform 0.22s;
+  }
+  .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+
+  /* ── 10. Range ── */
+  .slider-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .slider-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .slider-key { font-size: 0.75rem; color: var(--muted); }
+  .slider-val { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--accent4); font-weight: 500; }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 5px;
+    background: var(--border); border-radius: 3px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 24px; height: 24px;
+    border-radius: 50%; background: var(--accent4);
+    box-shadow: 0 1px 5px rgba(0,0,0,0.22);
+    cursor: pointer; border: 2.5px solid #fff;
+  }
+
+  /* ── 11. Color ── */
+  .color-row { display: flex; align-items: center; gap: 12px; }
+  input[type=color] {
+    width: 42px; height: 42px; border-radius: 9px;
+    border: 1.5px solid var(--border); background: none;
+    cursor: pointer; padding: 3px; box-shadow: var(--shadow);
+    -webkit-appearance: none;
+  }
+  .color-hex { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--label); }
+  .color-tag { font-size: 0.75rem; color: var(--muted); }
+
+  /* ── 12. Date / Time — iOS Safari fixed ── */
+  /*
+    Key fixes:
+    1. color-scheme: light  → forces iOS to render the value text in dark color
+    2. Explicit value=""    → pre-fill prevents the blank appearance
+    3. Floated label above  → so user always sees context even if picker looks empty
+    4. min-height           → ensures tap target is large enough on mobile
+  */
+  .date-field {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    position: relative;
+  }
+  .date-field-label {
+    display: block;
+    padding: 7px 13px 0;
+    font-size: 0.65rem; color: var(--muted);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .date-field input[type=date],
+  .date-field input[type=time],
+  .date-field input[type=datetime-local] {
+    display: block; width: 100%;
+    background: transparent; border: none; outline: none;
+    padding: 4px 13px 10px;
+    color: var(--text); font-size: 0.9rem;
+    -webkit-appearance: none; appearance: none;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    color-scheme: light;
+    min-height: 36px;
+  }
+
+  /* ── 13. File upload ── */
+  .file-zone {
+    border: 2px dashed var(--border); border-radius: 11px;
+    padding: 22px 14px; text-align: center; cursor: pointer;
+    background: var(--surface2); position: relative;
+    transition: border-color 0.18s, background 0.18s;
+  }
+  .file-zone:active { border-color: var(--accent); background: #e4eafb; }
+  .file-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .file-icon { font-size: 1.8rem; display: block; }
+  .file-zone p { font-size: 0.78rem; color: var(--muted); margin-top: 7px; }
+  .file-zone strong { color: var(--accent); }
+
+  /* ── 14. Segmented control ── */
+  .seg {
+    display: flex; background: var(--surface2);
+    border: 1.5px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px;
+  }
+  .seg input[type=radio] { display: none; }
+  .seg label {
+    flex: 1; text-align: center; padding: 8px 6px;
+    font-size: 0.82rem; border-radius: 8px; cursor: pointer;
+    color: var(--muted); user-select: none;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .seg input:checked + label {
+    background: var(--surface); color: var(--accent);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    border: 1px solid var(--border);
+  }
+
+  /* ── 15. Chips ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip input[type=checkbox] { display: none; }
+  .chip label {
+    display: inline-block; padding: 6px 14px; border-radius: 999px;
+    border: 1.5px solid var(--border); font-size: 0.8rem; color: var(--label);
+    cursor: pointer; background: var(--surface); box-shadow: var(--shadow);
+    transition: all 0.15s; user-select: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .chip input:checked + label {
+    background: #e4eafb; border-color: var(--accent);
+    color: var(--accent); font-weight: 500;
+  }
+
+  /* ── 16. Tag input ── */
+  .tag-field {
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 9px; padding: 8px 10px;
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    min-height: 46px; box-shadow: var(--shadow);
+  }
+  .tag-item {
+    display: flex; align-items: center; gap: 5px;
+    background: #d4f0e5; border: 1px solid #8ed4b8;
+    border-radius: 5px; padding: 3px 9px;
+    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: #147a5c;
+  }
+  .tag-item button {
+    background: none; border: none; color: #147a5c;
+    cursor: pointer; font-size: 0.85rem; padding: 0; line-height: 1;
+  }
+  .tag-input-inner {
+    background: none; border: none; outline: none;
+    color: var(--text); font-size: 0.85rem; min-width: 70px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── 17. Progress ── */
+  .prog-row { display: flex; flex-direction: column; gap: 5px; }
+  .prog-label-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); }
+  progress {
+    width: 100%; height: 7px; border: none; border-radius: 4px;
+    overflow: hidden; -webkit-appearance: none; appearance: none;
+    background: var(--surface2);
+  }
+  progress::-webkit-progress-bar { background: var(--surface2); border-radius: 4px; }
+  progress.c-blue::-webkit-progress-value { background: var(--accent); border-radius: 4px; }
+  progress.c-green::-webkit-progress-value { background: var(--accent3); border-radius: 4px; }
+  progress.c-red::-webkit-progress-value { background: var(--accent2); border-radius: 4px; }
+
+  /* ── 18. Meter ── */
+  meter {
+    width: 100%; height: 11px;
+    -webkit-appearance: none; appearance: none;
+    display: block;
+  }
+  meter::-webkit-meter-bar { background: var(--surface2); border-radius: 6px; border: none; box-shadow: none; }
+  meter::-webkit-meter-optimum-value { background: var(--accent3); border-radius: 6px; }
+  meter::-webkit-meter-suboptimum-value { background: #c97010; border-radius: 6px; }
+  meter::-webkit-meter-even-less-good-value { background: var(--accent2); border-radius: 6px; }
+
+  /* ── 19. Details ── */
+  details {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 9px; overflow: hidden;
+  }
+  details + details { margin-top: 7px; }
+  summary {
+    padding: 11px 14px; cursor: pointer; font-size: 0.88rem;
+    color: var(--label); list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    user-select: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '›'; font-size: 1.1rem; color: var(--muted); transition: transform 0.2s; }
+  details[open] summary::after { transform: rotate(90deg); }
+  details[open] summary { color: var(--text); background: var(--surface); }
+  details p { padding: 0 14px 12px; font-size: 0.8rem; color: var(--muted); line-height: 1.6; background: var(--surface); }
+
+  /* ── 20. Buttons ── */
+  .btn-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    padding: 10px 18px; border-radius: 9px; border: none;
+    font-size: 0.85rem; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+    -webkit-appearance: none;
+  }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 6px rgba(74,116,232,0.3); }
+  .btn-primary:active { background: #3d64d0; }
+  .btn-danger { background: var(--accent2); color: #fff; box-shadow: 0 2px 6px rgba(217,79,110,0.25); }
+  .btn-danger:active { opacity: 0.85; }
+  .btn-outline { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); box-shadow: var(--shadow); }
+  .btn-outline:active { background: var(--surface2); }
+  .btn-ghost { background: transparent; color: var(--muted); }
+  .btn-ghost:active { background: var(--surface2); color: var(--text); }
+  .btn-icon { padding: 10px 13px; font-size: 1rem; background: var(--surface); color: var(--label); border: 1.5px solid var(--border); box-shadow: var(--shadow); }
+  .btn:disabled { opacity: 0.38; cursor: not-allowed; box-shadow: none; }
+
+  /* ── 21. Listbox — collapsible (iOS fix) ── */
+  .listbox-wrap { position: relative; }
+  .listbox-trigger {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 9px; padding: 10px 13px;
+    font-size: 0.9rem; color: var(--text); cursor: pointer;
+    box-shadow: var(--shadow); font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.18s;
+  }
+  .listbox-trigger:focus { outline: none; border-color: var(--border-focus); box-shadow: var(--shadow-focus); }
+  .lb-arrow { font-size: 0.75rem; color: var(--muted); transition: transform 0.18s; }
+  .listbox-dropdown {
+    display: none;
+    margin-top: 4px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  }
+  .lb-open .listbox-dropdown { display: block; }
+  .listbox-dropdown input[type=checkbox] { display: none; }
+  .listbox-dropdown label {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 13px;
+    font-size: 0.88rem; color: var(--label);
+    cursor: pointer;
+    border-bottom: 1px solid var(--surface2);
+    transition: background 0.12s;
+    user-select: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .listbox-dropdown label:last-of-type { border-bottom: none; }
+  .listbox-dropdown input:checked + label {
+    background: #e4eafb; color: var(--accent); font-weight: 500;
+  }
+  .listbox-dropdown input:checked + label::after { content: '✓'; font-size: 0.82rem; color: var(--accent); }
+
+  /* ── 22. Output ── */
+  .out-field {
+    display: block; width: 100%;
+    background: #edf0fa; border: 1.5px solid #c4cee8;
+    border-radius: 9px; padding: 10px 13px;
+    font-family: 'DM Mono', monospace; font-size: 0.85rem;
+    color: var(--accent3); font-weight: 500;
+  }
+
+  /* ── 23. Fieldset ── */
+  fieldset {
+    border: 1.5px solid var(--border); border-radius: 11px;
+    padding: 14px 16px; background: var(--surface);
+  }
+  legend {
+    font-size: 0.68rem; font-family: 'DM Mono', monospace;
+    color: var(--accent); letter-spacing: 0.09em;
+    text-transform: uppercase; padding: 0 8px;
+  }
+  fieldset .demo { margin-top: 8px; }
+
+  /* ── 25. Canvas ── */
+  canvas {
+    border-radius: 9px; display: block; width: 100%;
+    background: var(--surface2); border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>HTML Controls<br>Field Guide</h1>
+    <p>25 native controls — every one you should know</p>
+  </div>
+</header>
+
+<div class="grid">
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Text Input</span><span class="card-num">01</span></div>
+    <p class="card-desc">Single-line text. Foundation of every form. Use <code>type</code> to specialize behavior and keyboard.</p>
+    <div class="demo">
+      <input class="inp" type="text">
+      <input class="inp" type="email">
+      <input class="inp" type="url">
+      <input class="inp" type="tel">
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Password</span><span class="card-num">02</span></div>
+    <p class="card-desc">Masked input. Always pair with a show/hide toggle — it reduces typos and frustration.</p>
+    <div class="demo">
+      <div class="inp-wrap">
+        <input class="inp" type="password" id="pw" value="s3cr3tpassword">
+        <button class="eye" onclick="var i=document.getElementById('pw');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'">👁</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Search</span><span class="card-num">03</span></div>
+    <p class="card-desc"><code>type="search"</code> — browser may add a clear × button natively. Add an icon overlay for visual polish.</p>
+    <div class="demo">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input class="inp" type="search">
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Number</span><span class="card-num">04</span></div>
+    <p class="card-desc">Numeric-only keyboard on mobile. Native spinners are ugly — replace with custom ± buttons.</p>
+    <div class="demo">
+      <div class="number-ctrl">
+        <button class="num-btn" onclick="var i=this.nextElementSibling;i.value=+i.value-1">−</button>
+        <input type="number" value="42" min="0" max="999">
+        <button class="num-btn" onclick="var i=this.previousElementSibling;i.value=+i.value+1">+</button>
+      </div>
+      <input class="inp" type="number" step="0.001" min="0">
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Textarea</span><span class="card-num">05</span></div>
+    <p class="card-desc">Multi-line text. Set <code>resize: vertical</code>. Always pair with a character counter.</p>
+    <div class="demo">
+      <textarea class="textarea" maxlength="200" id="ta" oninput="document.getElementById('tc').textContent=this.value.length+'/200'"></textarea>
+      <div style="text-align:right;font-size:0.72rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:-4px" id="tc">0/200</div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Select / Dropdown</span><span class="card-num">06</span></div>
+    <p class="card-desc">Choose one from a list. Style the wrapper div; apply <code>appearance:none</code> to the select itself.</p>
+    <div class="demo">
+      <div class="select-wrap">
+        <select class="sel">
+          <option disabled selected>Pick a protocol…</option>
+          <option>DVB-S2X</option>
+          <option>DVB-RCS2</option>
+          <option>LTE NTN</option>
+          <option>Starlink Gen3</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Checkbox</span><span class="card-num">07</span></div>
+    <p class="card-desc">Boolean or multi-select. The <code>indeterminate</code> [−] state is often overlooked — tap "All subsystems" to cycle all three states.</p>
+    <div class="demo">
+      <label class="check-row"><input type="checkbox" id="cb1" checked onchange="syncParent()"> Enable automatic gain control</label>
+      <label class="check-row"><input type="checkbox" id="cb2" checked onchange="syncParent()"> Rain fade prediction</label>
+      <label class="check-row"><input type="checkbox" id="cb3" onchange="syncParent()"> Beam power control</label>
+      <label class="check-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)">
+        <input type="checkbox" id="ind" onclick="toggleAll(this)">
+        <span>All subsystems</span>
+        <span id="ind-state" style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--accent);margin-left:6px;background:#eef1fb;padding:1px 7px;border-radius:4px">−</span>
+      </label>
+    </div>
+    <script>
+      var indEl = document.getElementById('ind');
+      var children = [document.getElementById('cb1'), document.getElementById('cb2'), document.getElementById('cb3')];
+      var indState = document.getElementById('ind-state');
+      // start indeterminate (2 of 3 checked)
+      indEl.indeterminate = true;
+      function syncParent() {
+        var all = children.every(function(c){return c.checked});
+        var none = children.every(function(c){return !c.checked});
+        indEl.indeterminate = !all && !none;
+        indEl.checked = all;
+        indState.textContent = indEl.indeterminate ? '−' : (indEl.checked ? '✓' : '○');
+        indState.style.color = indEl.indeterminate ? 'var(--accent)' : (indEl.checked ? 'var(--accent3)' : 'var(--muted)');
+      }
+      function toggleAll(el) {
+        // on click, .indeterminate is already cleared by browser; checked reflects new intent
+        var target = el.checked;
+        children.forEach(function(c){ c.checked = target; });
+        el.indeterminate = false;
+        indState.textContent = target ? '✓' : '○';
+        indState.style.color = target ? 'var(--accent3)' : 'var(--muted)';
+      }
+    </script>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Radio Button</span><span class="card-num">08</span></div>
+    <p class="card-desc">Mutually exclusive choice. Group by the same <code>name</code>. Show all options visibly — avoid hiding them in a dropdown.</p>
+    <div class="demo">
+      <div class="radio-group">
+        <label class="radio-row"><input type="radio" name="band" value="ka" checked> Ka-band (26.5–40 GHz)</label>
+        <label class="radio-row"><input type="radio" name="band" value="ku"> Ku-band (12–18 GHz)</label>
+        <label class="radio-row"><input type="radio" name="band" value="q"> Q/V-band (40–75 GHz)</label>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Toggle / Switch</span><span class="card-num">09</span></div>
+    <p class="card-desc">No native <code>&lt;switch&gt;</code> element — build from a styled checkbox + label. Instant effect, no Save button needed.</p>
+    <div class="demo">
+      <div class="toggle-row">
+        <span class="toggle-label">ACM enabled</span>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Beam auto-select</span>
+        <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Rain fade prediction</span>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Range Slider</span><span class="card-num">10</span></div>
+    <p class="card-desc">Continuous value in a range. Always display the live readout. Style thumb and track via pseudo-elements.</p>
+    <div class="demo">
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <span class="slider-key">EIRP offset</span>
+          <span class="slider-val" id="sv1">0 dBW</span>
+        </div>
+        <input type="range" min="-10" max="10" value="0" step="0.5" oninput="document.getElementById('sv1').textContent=(+this.value>0?'+':'')+this.value+' dBW'">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <span class="slider-key">Frequency</span>
+          <span class="slider-val" id="sv2">20.0 GHz</span>
+        </div>
+        <input type="range" min="17.7" max="21.2" value="20" step="0.1" oninput="document.getElementById('sv2').textContent=(+this.value).toFixed(1)+' GHz'">
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Color Picker</span><span class="card-num">11</span></div>
+    <p class="card-desc">Native OS color chooser. Combine with a hex readout. Great for beam color assignment in AxtaLINK.</p>
+    <div class="demo">
+      <div class="color-row">
+        <input type="color" value="#4a74e8" id="cp1" oninput="document.getElementById('ch1').textContent=this.value">
+        <span class="color-hex" id="ch1">#4a74e8</span>
+        <span class="color-tag">Beam DL</span>
+      </div>
+      <div class="color-row">
+        <input type="color" value="#d94f6e" id="cp2" oninput="document.getElementById('ch2').textContent=this.value">
+        <span class="color-hex" id="ch2">#d94f6e</span>
+        <span class="color-tag">Beam UL</span>
+      </div>
+      <div class="color-row">
+        <input type="color" value="#1a9e7a" id="cp3" oninput="document.getElementById('ch3').textContent=this.value">
+        <span class="color-hex" id="ch3">#1a9e7a</span>
+        <span class="color-tag">Position</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Date &amp; Time</span><span class="card-num">12</span></div>
+    <p class="card-desc">Native pickers. Critical iOS fix: set <code>color-scheme: light</code> and always pre-fill a <code>value</code> — iOS Safari shows blank text without it.</p>
+    <div class="demo">
+      <div class="date-field">
+        <span class="date-field-label">Date</span>
+        <input type="date" value="2026-05-18">
+      </div>
+      <div class="date-field">
+        <span class="date-field-label">Time</span>
+        <input type="time" value="14:30">
+      </div>
+      <div class="date-field">
+        <span class="date-field-label">Date &amp; Time</span>
+        <input type="datetime-local" value="2026-05-18T14:30">
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">File Upload</span><span class="card-num">13</span></div>
+    <p class="card-desc">Hide the native input; build a drop-zone overlay. Use <code>accept</code> to filter types; <code>multiple</code> for batch uploads.</p>
+    <div class="demo">
+      <div class="file-zone">
+        <input type="file" accept=".json,.csv,.geojson" multiple>
+        <span class="file-icon">📂</span>
+        <p><strong>Tap or drag</strong> to upload<br>.json · .csv · .geojson</p>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Segmented Control</span><span class="card-num">14</span></div>
+    <p class="card-desc">Radio buttons styled as a pill bar. Selected tab gets a white pill + shadow to pop. Great for view or unit modes.</p>
+    <div class="demo">
+      <div class="seg">
+        <input type="radio" name="view" id="vg" checked><label for="vg">Globe</label>
+        <input type="radio" name="view" id="vm"><label for="vm">Map</label>
+        <input type="radio" name="view" id="vt"><label for="vt">Table</label>
+      </div>
+      <div class="seg">
+        <input type="radio" name="unit" id="ud" checked><label for="ud">dBW</label>
+        <input type="radio" name="unit" id="uw"><label for="uw">W</label>
+        <input type="radio" name="unit" id="um"><label for="um">mW</label>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Chip Multi-Select</span><span class="card-num">15</span></div>
+    <p class="card-desc">Checkboxes styled as pill chips. Scannable, large tap targets, mobile-friendly. Selected = accent border + tinted fill.</p>
+    <div class="demo">
+      <div class="chips">
+        <span class="chip"><input type="checkbox" id="c1" checked><label for="c1">Downlink</label></span>
+        <span class="chip"><input type="checkbox" id="c2" checked><label for="c2">Uplink</label></span>
+        <span class="chip"><input type="checkbox" id="c3"><label for="c3">Gateway</label></span>
+        <span class="chip"><input type="checkbox" id="c4"><label for="c4">User</label></span>
+        <span class="chip"><input type="checkbox" id="c5"><label for="c5">Spot</label></span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Tag / Token Input</span><span class="card-num">16</span></div>
+    <p class="card-desc">Not a native element — styled div + text input. Press Enter or comma to add a token. Tap × to remove.</p>
+    <div class="demo">
+      <div class="tag-field">
+        <span class="tag-item">Ka-band <button onclick="this.parentElement.remove()">×</button></span>
+        <span class="tag-item">LEO <button onclick="this.parentElement.remove()">×</button></span>
+        <span class="tag-item">GEO <button onclick="this.parentElement.remove()">×</button></span>
+        <input class="tag-input-inner" onkeydown="if((event.key==='Enter'||event.key===',')&&this.value.trim()){event.preventDefault();var t=document.createElement('span');t.className='tag-item';t.innerHTML=this.value.trim()+' <button onclick=\'this.parentElement.remove()\'>×</button>';this.parentElement.insertBefore(t,this);this.value=''}">
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Progress Bar</span><span class="card-num">17</span></div>
+    <p class="card-desc">Native <code>&lt;progress&gt;</code>. Style track with <code>::-webkit-progress-value</code>. Omit <code>value</code> for the indeterminate animated state.</p>
+    <div class="demo">
+      <div class="prog-row">
+        <div class="prog-label-row"><span>Link budget</span><span>78%</span></div>
+        <progress class="c-blue" value="78" max="100"></progress>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label-row"><span>Rain fade margin</span><span>45%</span></div>
+        <progress class="c-green" value="45" max="100"></progress>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label-row"><span>Interference</span><span>91%</span></div>
+        <progress class="c-red" value="91" max="100"></progress>
+      </div>
+      <div class="prog-row">
+        <div class="prog-label-row"><span>Computing…</span><span>—</span></div>
+        <progress></progress>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Meter (Gauge)</span><span class="card-num">18</span></div>
+    <p class="card-desc"><code>&lt;meter&gt;</code> measures a value in a known range. Browser auto-colors based on <code>low</code> / <code>high</code> / <code>optimum</code> — no JS needed.</p>
+    <div class="demo">
+      <div class="sublabel">High — optimum (green)</div>
+      <meter value="0.82" min="0" max="1" low="0.3" high="0.6" optimum="0.9"></meter>
+      <div class="sublabel">Low — poor (red)</div>
+      <meter value="0.18" min="0" max="1" low="0.3" high="0.6" optimum="0.9"></meter>
+      <div class="sublabel">Mid — suboptimum (yellow-orange)</div>
+      <meter value="0.48" min="0" max="1" low="0.3" high="0.6" optimum="0.9"></meter>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Details / Accordion</span><span class="card-num">19</span></div>
+    <p class="card-desc">Native disclosure — <code>&lt;details&gt;</code> + <code>&lt;summary&gt;</code>. Zero JavaScript. The browser manages open/close state natively.</p>
+    <div class="demo">
+      <details open>
+        <summary>Link budget parameters</summary>
+        <p>EIRP, G/T, free-space path loss, atmospheric attenuation, and pointing loss combine to determine C/N₀.</p>
+      </details>
+      <details>
+        <summary>Rain fade model</summary>
+        <p>ITU-R P.618-14 computes excess attenuation from rainfall rate CDF for a given availability target.</p>
+      </details>
+      <details>
+        <summary>Beam geometry</summary>
+        <p>Antenna gain is computed from aperture and frequency; the −3 dB contour defines the beam edge.</p>
+      </details>
+    </div>
+  </div>
+
+  
+  <div class="card card-wide">
+    <div class="card-header"><span class="card-title">Button Variants</span><span class="card-num">20</span></div>
+    <p class="card-desc">Primary · Danger · Outline · Ghost · Icon-only · Disabled. One primary per screen max — it's the visual anchor of the whole UI.</p>
+    <div class="demo">
+      <div class="btn-group">
+        <button class="btn btn-primary">Save config</button>
+        <button class="btn btn-danger">Delete beam</button>
+        <button class="btn btn-outline">Cancel</button>
+        <button class="btn btn-ghost">View docs</button>
+        <button class="btn btn-icon">⚙</button>
+        <button class="btn btn-icon">↗</button>
+        <button class="btn btn-primary" disabled>Disabled</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Listbox</span><span class="card-num">21</span></div>
+    <p class="card-desc"><code>select[size]</code> collapses on iOS. Fix: a custom collapsible listbox — tap the trigger to open/close, tap rows to multi-select.</p>
+    <div class="demo">
+      <div class="listbox-wrap" id="lbw">
+        <button class="listbox-trigger" onclick="
+          var p=this.parentElement;
+          var open=p.classList.toggle('lb-open');
+          this.querySelector('.lb-arrow').textContent=open?'▴':'▾';
+        ">
+          <span id="lb-summary">2 of 6 selected</span>
+          <span class="lb-arrow">▾</span>
+        </button>
+        <div class="listbox-dropdown">
+          <input type="checkbox" id="lb1" checked><label for="lb1">Beam 1 — Americas</label>
+          <input type="checkbox" id="lb2"><label for="lb2">Beam 2 — Europe</label>
+          <input type="checkbox" id="lb3" checked><label for="lb3">Beam 3 — APAC</label>
+          <input type="checkbox" id="lb4"><label for="lb4">Beam 4 — Africa</label>
+          <input type="checkbox" id="lb5"><label for="lb5">Beam 5 — Middle East</label>
+          <input type="checkbox" id="lb6"><label for="lb6">Beam 6 — Arctic</label>
+        </div>
+      </div>
+      <script>
+        (function(){
+          var lbIds = ['lb1','lb2','lb3','lb4','lb5','lb6'];
+          var summary = document.getElementById('lb-summary');
+          function updateSummary() {
+            var n = lbIds.filter(function(id){return document.getElementById(id).checked}).length;
+            summary.textContent = n + ' of ' + lbIds.length + ' selected';
+          }
+          lbIds.forEach(function(id){
+            document.getElementById(id).addEventListener('change', updateSummary);
+          });
+        })();
+      </script>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Output / Read-only</span><span class="card-num">22</span></div>
+    <p class="card-desc"><code>&lt;output&gt;</code> is the semantic element for computed results. Visually distinct — tinted background, monospace, no edit affordance.</p>
+    <div class="demo">
+      <div class="sublabel">C/N₀ (computed)</div>
+      <div class="out-field">74.3 dB·Hz</div>
+      <div class="sublabel">Free-space path loss</div>
+      <div class="out-field">209.7 dB</div>
+      <div class="sublabel">Rain margin</div>
+      <div class="out-field">3.2 dB</div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Fieldset / Group</span><span class="card-num">23</span></div>
+    <p class="card-desc"><code>&lt;fieldset&gt;</code> + <code>&lt;legend&gt;</code> for semantic grouping. Screen readers announce the legend as context for every child field.</p>
+    <div class="demo">
+      <fieldset>
+        <legend>Gateway RF</legend>
+        <div class="demo">
+          <input class="inp" type="number">
+          <input class="inp" type="number">
+          <div class="select-wrap">
+            <select class="sel">
+              <option>HPA type…</option>
+              <option>TWTA</option>
+              <option>SSPA</option>
+              <option>Klystron</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Datalist / Autocomplete</span><span class="card-num">24</span></div>
+    <p class="card-desc">Free-text input + suggestion dropdown. No JS required. Linked via <code>list</code> attribute. Still accepts arbitrary values unlike <code>&lt;select&gt;</code>.</p>
+    <div class="demo">
+      <input class="inp" list="sats">
+      <datalist id="sats">
+        <option value="Intelsat 39">
+        <option value="SES-17">
+        <option value="Eutelsat 172B">
+        <option value="Viasat-3 Americas">
+        <option value="EchoStar 24">
+        <option value="JUPITER-3">
+      </datalist>
+      <p style="font-size:0.72rem;color:var(--muted)">Type to filter suggestions</p>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Canvas</span><span class="card-num">25</span></div>
+    <p class="card-desc">Pixel-level 2D drawing. Essential for spectrum displays, globe renderers, custom charts. Touch or mouse to change frequency.</p>
+    <div class="demo">
+      <canvas id="cv" height="90"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var cv = document.getElementById('cv');
+  var ctx = cv.getContext('2d');
+  var mx = 0.5;
+
+  function resize(){ cv.width = cv.offsetWidth; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  cv.addEventListener('mousemove', function(e){
+    var r = cv.getBoundingClientRect();
+    mx = (e.clientX - r.left) / r.width;
+  });
+  cv.addEventListener('touchmove', function(e){
+    e.preventDefault();
+    var r = cv.getBoundingClientRect();
+    mx = (e.touches[0].clientX - r.left) / r.width;
+  }, {passive: false});
+
+  var t = 0;
+  function frame(){
+    var W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#e8ebf2'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(178,186,208,0.55)'; ctx.lineWidth=1;
+    for(var x=0;x<W;x+=Math.round(W/8)){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(var y=0;y<H;y+=15){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    var freq = 1 + mx * 3.2;
+    ctx.beginPath(); ctx.strokeStyle='#4a74e8'; ctx.lineWidth=2.5;
+    for(var i=0;i<W;i++){
+      var v = H/2 + Math.sin((i/W)*Math.PI*2*freq*4+t)*18 + Math.sin((i/W)*Math.PI*2*1.4+t*0.7)*7;
+      i===0?ctx.moveTo(i,v):ctx.lineTo(i,v);
+    }
+    ctx.stroke();
+    ctx.beginPath(); ctx.strokeStyle='rgba(217,79,110,0.5)'; ctx.lineWidth=1.8;
+    for(var i=0;i<W;i++){
+      var v = H/2 + Math.cos((i/W)*Math.PI*2*freq*2.6+t*1.2)*13;
+      i===0?ctx.moveTo(i,v):ctx.lineTo(i,v);
+    }
+    ctx.stroke();
+    t += 0.038;
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+
+</body>
+</html>
