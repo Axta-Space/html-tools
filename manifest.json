@@ -1,0 +1,18 @@
+{
+  "name": "Axta HTML Tools",
+  "short_name": "Axta Tools",
+  "description": "Lightweight satcom tools. Single-file HTML, no install required.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8f8f6",
+  "theme_color": "#1a6ef5",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iOTYiIGN5PSI5NiIgcj0iOTAiIGZpbGw9IiMxYTZlZjUiLz48dGV4dCB4PSI5NiIgeT0iMTEwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjcyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "orientation": "any"
+}

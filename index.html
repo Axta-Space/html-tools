@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>axta tools</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#1a6ef5">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iOTYiIGN5PSI5NiIgcj0iOTAiIGZpbGw9IiMxYTZlZjUiLz48dGV4dCB4PSI5NiIgeT0iMTEwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjcyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iOTYiIGN5PSI5NiIgcj0iOTAiIGZpbGw9IiMxYTZlZjUiLz48dGV4dCB4PSI5NiIgeT0iMTEwIiBmb250LWZhbWlseT0ic3lzdGVtLXVpLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjcyIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=">
   <style>
     :root {
       --bg: #f8f8f6;
@@ -238,7 +242,7 @@
 
       <a class="tool-card" href="./beam-editor/">
         <div class="card-top">
-          <div class="tool-name"><span class="prefix">axta</span>BEAM-EDITOR</div>
+          <div class="tool-name">BEAM-EDITOR</div>
           <div class="tool-badge">standalone</div>
         </div>
         <div class="tool-desc">D3-based beam editor for visualizing and manipulating beam coverage.</div>
@@ -246,7 +250,7 @@
 
       <a class="tool-card" href="./Sat-Tracker/">
         <div class="card-top">
-          <div class="tool-name"><span class="prefix">axta</span>SAT-TRACKER</div>
+          <div class="tool-name">SAT-TRACKER</div>
           <div class="tool-badge">standalone</div>
         </div>
         <div class="tool-desc">Real-time satellite tracking and orbital visualization.</div>
@@ -283,6 +287,21 @@
     <span class="footer-text">dbetts-dev / html-tools</span>
     <a class="footer-link" href="https://github.com/dbetts-dev/html-tools" target="_blank">github ↗</a>
   </footer>
+
+  <script>
+    // Register service worker for PWA support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(registration => {
+            console.log('SW registered: ', registration);
+          })
+          .catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
 
 </body>
 </html>
