@@ -480,9 +480,22 @@
     background: var(--surface2); border: 1px solid var(--border);
     box-shadow: var(--shadow);
   }
+  /* ── HOME NAV ── */
+  .home-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top, 0); }
+  .home-nav__link { display: inline-flex; align-items: center; gap: 6px; padding: 0 20px; min-height: 44px; font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: lowercase; text-decoration: none; color: var(--muted); touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+  .home-nav__arrow { font-size: 0.8rem; transition: transform 0.15s; }
+  @media (hover: hover) { .home-nav__link:hover { color: var(--accent); } .home-nav__link:hover .home-nav__arrow { transform: translateX(-3px); } }
+  .home-nav__link:active { color: var(--accent); }
 </style>
 </head>
 <body>
+
+<nav class="home-nav" aria-label="Return to home">
+  <a class="home-nav__link" href="../">
+    <span class="home-nav__arrow" aria-hidden="true">&#8592;</span>
+    <span>axta tools</span>
+  </a>
+</nav>
 
 <header>
   <div class="inner">
