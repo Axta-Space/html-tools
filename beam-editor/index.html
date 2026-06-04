@@ -27,7 +27,8 @@
     touch-action: none;
     user-select: none;
   }
-  #app { display: flex; flex-direction: column; height: 100%; }
+  body { display: flex; flex-direction: column; }
+  #app { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
   header {
     flex-shrink: 0;
@@ -152,9 +153,21 @@
   .ctrl input[type=number]::-webkit-inner-spin-button,
   .ctrl input[type=number]::-webkit-outer-spin-button { opacity: 1; height: 22px; }
   .ctrl input[type=number]:focus { border-color: var(--accent); }
+  /* ── HOME NAV ── */
+  .home-nav { flex-shrink: 0; background: var(--panel); border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top, 0); }
+  .home-nav__link { display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; min-height: 44px; font-family: 'Courier New', monospace; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: lowercase; text-decoration: none; color: var(--muted); touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+  .home-nav__arrow { font-size: 0.75rem; transition: transform 0.15s; }
+  @media (hover: hover) { .home-nav__link:hover { color: var(--accent); } .home-nav__link:hover .home-nav__arrow { transform: translateX(-3px); } }
+  .home-nav__link:active { color: var(--accent); }
 </style>
 </head>
 <body>
+<nav class="home-nav" aria-label="Return to home">
+  <a class="home-nav__link" href="../">
+    <span class="home-nav__arrow" aria-hidden="true">&#8592;</span>
+    <span>axta tools</span>
+  </a>
+</nav>
 <div id="app">
   <header>
     <h1>GSO Beam Footprint</h1>

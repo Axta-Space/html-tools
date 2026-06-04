@@ -204,9 +204,22 @@
   .pulse.cached  { background: #1a7a6e; animation: none; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.65)} }
   @keyframes blink  { 50%{opacity:0.2} }
+  /* ── HOME NAV ── */
+  .home-nav { flex-shrink: 0; background: var(--panel); border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top, 0); }
+  .home-nav__link { display: inline-flex; align-items: center; gap: 6px; padding: 0 18px; min-height: 44px; font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: lowercase; text-decoration: none; color: var(--muted); touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
+  .home-nav__arrow { font-size: 0.75rem; transition: transform 0.15s; }
+  @media (hover: hover) { .home-nav__link:hover { color: var(--accent); } .home-nav__link:hover .home-nav__arrow { transform: translateX(-3px); } }
+  .home-nav__link:active { color: var(--accent); }
 </style>
 </head>
 <body>
+
+<nav class="home-nav" aria-label="Return to home">
+  <a class="home-nav__link" href="../">
+    <span class="home-nav__arrow" aria-hidden="true">&#8592;</span>
+    <span>axta tools</span>
+  </a>
+</nav>
 
 <header>
   <div class="logo">ORBITAL<span>LIVE SATELLITE TRACKER</span></div>
