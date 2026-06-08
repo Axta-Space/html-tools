@@ -54,6 +54,18 @@
       color: var(--accent);
     }
 
+    .ver-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
     h1 {
       font-size: clamp(28px, 6vw, 38px);
       font-weight: 600;
@@ -236,7 +248,7 @@
 <body>
 
   <header>
-    <div class="wordmark"><span>axta</span> · engineering tools</div>
+    <div class="wordmark"><span>axta</span> · engineering tools <span class="ver-chip">v1.0</span></div>
     <h1>html tools <em>/</em></h1>
     <p class="subtitle">Lightweight satcom tools. Single-file HTML, no install required.</p>
   </header>
@@ -296,8 +308,9 @@
   </footer>
 
   <script>
-    const BUILD_DATE = '2026-06-04';
-    document.getElementById('build-date').textContent = 'built ' + BUILD_DATE;
+    const VERSION = 'v1.0';
+    const BUILD_DATE = '2026-06-08';
+    document.getElementById('build-date').textContent = VERSION + ' · built ' + BUILD_DATE;
 
     // Register service worker for PWA support
     if ('serviceWorker' in navigator) {
