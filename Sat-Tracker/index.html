@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ORBITAL — Live Satellite Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -35,7 +35,7 @@
   body {
     background: var(--bg); color: var(--text);
     font-family: 'Barlow', sans-serif; font-weight: 300;
-    height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+    height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
   }
 
   /* ── HEADER ── */
@@ -98,6 +98,8 @@
   /* ISS halo ring */
   .iss-halo { pointer-events: none; fill: none; stroke: var(--c-iss); stroke-width: 1.5; opacity: 0.6; }
 
+  #globe-svg { touch-action: none; user-select: none; -webkit-user-select: none; display: block; }
+
   .drag-hint {
     position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
     font-family: 'Share Tech Mono', monospace; font-size: 0.56rem;
@@ -121,6 +123,10 @@
     display: flex; align-items: center; gap: 8px; font-size: 0.74rem;
     margin-bottom: 4px; cursor: pointer; user-select: none;
     padding: 2px 4px; border-radius: 3px; transition: background 0.1s;
+    /* button reset */
+    background: none; border: none; width: 100%; text-align: left;
+    font-family: inherit; color: inherit;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
   .legend-item:hover { background: #f0f4f8; }
   .legend-item.hidden-group { opacity: 0.38; }
@@ -205,12 +211,53 @@
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.65)} }
   @keyframes blink  { 50%{opacity:0.2} }
   /* ── HOME NAV ── */
-  .home-nav { flex-shrink: 0; background: var(--panel); border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top, 0); display: flex; align-items: center; justify-content: space-between; }
+  .home-nav { flex-shrink: 0; background: var(--panel); border-bottom: 1px solid var(--border); padding-top: env(safe-area-inset-top, 0); display: flex; align-items: center; justify-content: space-between; touch-action: manipulation; position: relative; z-index: 10; }
   .home-nav__link { display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; min-height: 44px; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.04em; text-decoration: none; color: var(--muted); touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
   .home-nav__arrow { font-size: 14px; transition: transform 0.15s; }
   @media (hover: hover) { .home-nav__link:hover { color: var(--accent); } .home-nav__link:hover .home-nav__arrow { transform: translateX(-3px); } }
   .home-nav__link:active { color: var(--accent); }
   .home-nav__meta { padding: 0 14px; font-family: system-ui, sans-serif; font-size: 11px; color: var(--muted); opacity: 0.7; letter-spacing: 0.03em; }
+
+  /* ── INFO SECTION (replaces inline style on second sidebar section) ── */
+  .info-section {
+    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+    padding-bottom: 0; border-bottom: none;
+  }
+
+  /* ── MOBILE LAYOUT ── */
+  @media (max-width: 640px) {
+    body { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; }
+
+    header { padding: 8px 14px; gap: 8px; }
+    .header-controls { display: none; }
+    .header-stats .stat:not(:first-child) { display: none; }
+    .logo { font-size: 1rem; }
+
+    .main { flex-direction: column; overflow: visible; }
+
+    #globe-container { flex: none; height: min(90vw, 420px); }
+
+    #sidebar {
+      width: 100%; border-left: none; border-top: 1px solid var(--border);
+      overflow: visible; flex-shrink: 0;
+    }
+
+    .legend-row { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; }
+
+    .legend-item {
+      display: inline-flex; width: auto; margin-bottom: 0;
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 5px 12px; font-size: 0.7rem;
+    }
+    .legend-item:hover { background: none; }
+
+    .info-section { flex: none; max-height: 200px; overflow-y: auto; }
+    #info-panel { -webkit-overflow-scrolling: touch; }
+    #sat-list { max-height: 160px; -webkit-overflow-scrolling: touch; }
+    #diag-log { height: 140px; }
+
+    .drag-hint { font-size: 0.48rem; letter-spacing: 0.08em; }
+  }
 </style>
 </head>
 <body>
@@ -260,31 +307,33 @@
   <div id="sidebar">
     <!-- Legend with toggles -->
     <div class="sidebar-section">
-      <div class="section-title">Groups — click to toggle</div>
-      <div class="legend-item" data-group="iss"      onclick="toggleGroup('iss')">
-        <div class="legend-dot" style="background:var(--c-iss)"></div>
-        <span>ISS</span><span class="legend-count" id="cnt-iss">—</span>
-      </div>
-      <div class="legend-item" data-group="starlink" onclick="toggleGroup('starlink')">
-        <div class="legend-dot" style="background:var(--c-starlink)"></div>
-        <span>Starlink</span><span class="legend-count" id="cnt-starlink">—</span>
-      </div>
-      <div class="legend-item" data-group="oneweb"   onclick="toggleGroup('oneweb')">
-        <div class="legend-dot" style="background:var(--c-oneweb)"></div>
-        <span>OneWeb</span><span class="legend-count" id="cnt-oneweb">—</span>
-      </div>
-      <div class="legend-item" data-group="weather"  onclick="toggleGroup('weather')">
-        <div class="legend-dot" style="background:var(--c-goes)"></div>
-        <span>Weather (GOES)</span><span class="legend-count" id="cnt-weather">—</span>
-      </div>
-      <div class="legend-item" data-group="station"  onclick="toggleGroup('station')">
-        <div class="legend-dot" style="background:var(--c-stations)"></div>
-        <span>Space Stations</span><span class="legend-count" id="cnt-station">—</span>
+      <div class="section-title">Groups — tap to toggle</div>
+      <div class="legend-row">
+        <button class="legend-item" data-group="iss"      onclick="toggleGroup('iss')">
+          <div class="legend-dot" style="background:var(--c-iss)"></div>
+          <span>ISS</span><span class="legend-count" id="cnt-iss">—</span>
+        </button>
+        <button class="legend-item" data-group="starlink" onclick="toggleGroup('starlink')">
+          <div class="legend-dot" style="background:var(--c-starlink)"></div>
+          <span>Starlink</span><span class="legend-count" id="cnt-starlink">—</span>
+        </button>
+        <button class="legend-item" data-group="oneweb"   onclick="toggleGroup('oneweb')">
+          <div class="legend-dot" style="background:var(--c-oneweb)"></div>
+          <span>OneWeb</span><span class="legend-count" id="cnt-oneweb">—</span>
+        </button>
+        <button class="legend-item" data-group="weather"  onclick="toggleGroup('weather')">
+          <div class="legend-dot" style="background:var(--c-goes)"></div>
+          <span>Weather (GOES)</span><span class="legend-count" id="cnt-weather">—</span>
+        </button>
+        <button class="legend-item" data-group="station"  onclick="toggleGroup('station')">
+          <div class="legend-dot" style="background:var(--c-stations)"></div>
+          <span>Space Stations</span><span class="legend-count" id="cnt-station">—</span>
+        </button>
       </div>
     </div>
 
     <!-- Selected satellite info -->
-    <div class="sidebar-section" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding-bottom:0;border-bottom:none">
+    <div class="sidebar-section info-section">
       <div class="section-title">Selected Satellite</div>
       <div id="info-panel"><div class="info-placeholder">Click a satellite on the globe to view orbital data.</div></div>
     </div>
@@ -806,6 +855,7 @@ function animate() {
 async function init() {
   initSVG(); resize();
   window.addEventListener('resize', resize);
+  if (window.innerWidth <= 640) setTimeout(resize, 150);
   animate();
 
   log('FORMAT=TLE · satellite.js twoline2satrec() · CelesTrak GP API', 'info');
