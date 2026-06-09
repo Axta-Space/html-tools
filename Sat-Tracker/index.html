@@ -228,6 +228,9 @@
   @media (max-width: 640px) {
     body { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; }
 
+    /* Sticky nav so ← axta tools is always reachable */
+    .home-nav { position: sticky; top: 0; z-index: 20; }
+
     header { padding: 8px 14px; gap: 8px; }
     .header-controls { display: none; }
     .header-stats .stat:not(:first-child) { display: none; }
@@ -735,8 +738,24 @@ function updateSatDots() {
           .attr('class', 'sat-dot')
           .attr('opacity', isSmall ? 0.72 : 1)
           .on('click', (e, d) => { e.stopPropagation(); selectSat(d); })
+          // iOS Safari: click often never fires on SVG circles inside a D3-drag
+          // context. Record touch origin and treat a sub-12px touchend as a tap.
+          .on('touchstart', function(e) {
+            const t = e.touches[0];
+            this._tapOrigin = { x: t.clientX, y: t.clientY };
+          }, { passive: true })
+          .on('touchend', function(e, d) {
+            if (!this._tapOrigin) return;
+            const t = e.changedTouches[0];
+            const moved = Math.hypot(t.clientX - this._tapOrigin.x, t.clientY - this._tapOrigin.y);
+            this._tapOrigin = null;
+            if (moved < 12) {
+              e.preventDefault();   // suppress the subsequent click
+              e.stopPropagation();
+              selectSat(d);
+            }
+          }, { passive: false })
           .on('mouseenter', (e, d) => {
-            // Only enlarge if not currently selected (selected uses stroke, not size)
             if (d !== selectedSat) d3.select(e.currentTarget).attr('r', Math.max(d.size * 2.2, 7));
           })
           .on('mouseleave', (e, d) => {
