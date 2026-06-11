@@ -226,13 +226,24 @@
 
   /* ── MOBILE LAYOUT ── */
   @media (max-width: 640px) {
-    body { height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto; }
+    body {
+      height: auto; min-height: 100vh; min-height: 100dvh; overflow-y: auto;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      padding-left: env(safe-area-inset-left, 0);
+      padding-right: env(safe-area-inset-right, 0);
+    }
 
     /* Sticky nav so ← axta tools is always reachable */
     .home-nav { position: sticky; top: 0; z-index: 20; }
 
-    header { padding: 8px 14px; gap: 8px; }
-    .header-controls { display: none; }
+    /* Wrap the header so its controls drop to a second full-width row
+       instead of being hidden — they're the tool's primary controls. */
+    header { padding: 8px 14px; gap: 8px 12px; flex-wrap: wrap; }
+    .header-controls {
+      order: 3; width: 100%; justify-content: flex-start;
+      gap: 12px; flex-wrap: wrap;
+      padding-top: 8px; border-top: 1px solid var(--border);
+    }
     .header-stats .stat:not(:first-child) { display: none; }
     .logo { font-size: 1rem; }
 
@@ -270,7 +281,7 @@
     <span class="home-nav__arrow" aria-hidden="true">&#8592;</span>
     <span>axta tools</span>
   </a>
-  <span class="home-nav__meta">v1.0 · 2026-06-08</span>
+  <span class="home-nav__meta">v1.1 · 2026-06-11</span>
 </nav>
 
 <header>
@@ -799,9 +810,9 @@ function updateInfoPanel(sat) {
   const incl = parseFloat(sat.tle2.substring(8, 16)).toFixed(2);
   const ecc  = parseFloat('0.' + sat.tle2.substring(26, 33)).toExponential(2);
   const period = mm > 0 ? (1440 / mm).toFixed(1) : '—';
-  const prog = (Date.now() / 1000 / 86400) % 1;
+  const prog = orbitProgress(sat);
   document.getElementById('info-panel').innerHTML = `
-    <div class="info-name">${sat.name}</div>
+    <div class="info-name"></div>
     <div class="info-row"><span class="info-key">LAT</span><span class="info-val blue">${pos.lat!=null?pos.lat.toFixed(3)+'°':'—'}</span></div>
     <div class="info-row"><span class="info-key">LON</span><span class="info-val blue">${pos.lon!=null?pos.lon.toFixed(3)+'°':'—'}</span></div>
     <div class="info-row"><span class="info-key">ALT</span><span class="info-val orange">${pos.alt!=null?pos.alt.toFixed(0)+' km':'—'}</span></div>
@@ -810,10 +821,32 @@ function updateInfoPanel(sat) {
     <div class="info-row"><span class="info-key">ECC</span><span class="info-val">${ecc}</span></div>
     <div class="info-row"><span class="info-key">GROUP</span><span class="info-val green">${sat.group.toUpperCase()}</span></div>
     <div style="margin-top:8px">
-      <div class="orbit-label">ORBIT PROGRESS (est.)</div>
-      <div class="orbit-bar"><div class="orbit-fill" style="width:${(prog*100).toFixed(1)}%"></div></div>
-      <div class="orbit-label">${(prog*100).toFixed(1)}%</div>
+      <div class="orbit-label">ORBIT PROGRESS</div>
+      <div class="orbit-bar"><div class="orbit-fill" style="width:${prog!=null?(prog*100).toFixed(1):0}%"></div></div>
+      <div class="orbit-label">${prog!=null?(prog*100).toFixed(1)+'%':'—'}</div>
     </div>`;
+  // Set the (externally sourced) name via textContent to avoid HTML injection.
+  document.querySelector('#info-panel .info-name').textContent = sat.name;
+}
+
+// Fraction [0,1) of the satellite's orbit completed right now. Mean anomaly
+// advances linearly in time (M = M0 + n·Δt), so M/2π is a faithful orbit phase.
+// Uses standard satrec epoch elements (jdsatepoch, mo, no) rather than the
+// wall-clock time of day, which the old bar incorrectly showed.
+function orbitProgress(sat) {
+  try {
+    const s = sat.satrec;
+    const now = new Date();
+    const jdNow = satellite.jday(
+      now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(),
+      now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()
+    );
+    const minutesSinceEpoch = (jdNow - s.jdsatepoch) * 1440;
+    const M = s.mo + s.no * minutesSinceEpoch;   // mean anomaly, radians
+    let frac = (M / (2 * Math.PI)) % 1;
+    if (frac < 0) frac += 1;
+    return isFinite(frac) ? frac : null;
+  } catch (e) { return null; }
 }
 
 let lastVisible = [];
@@ -824,7 +857,12 @@ function updateSatList(sats) {
   lastVisible.slice(0, 30).forEach(sat => {
     const item = document.createElement('div');
     item.className = 'sat-list-item' + (sat === selectedSat ? ' active' : '');
-    item.innerHTML = `<div class="sat-list-dot" style="background:${sat.color}"></div>${sat.name}`;
+    const dot = document.createElement('div');
+    dot.className = 'sat-list-dot';
+    dot.style.background = sat.color;
+    item.appendChild(dot);
+    // External name → textContent, never innerHTML.
+    item.appendChild(document.createTextNode(sat.name));
     item.onclick = () => selectSat(sat);
     list.appendChild(item);
   });
@@ -919,9 +957,9 @@ async function init() {
   if (total === 0) {
     setStatus('No data — check log', 'error');
     log('─── TROUBLESHOOTING ───', 'error');
-    log('1. Open Edge DevTools (F12) → Network tab, reload, check celestrak.org rows', 'info');
+    log('1. Open browser DevTools → Network tab, reload, check celestrak.org rows', 'info');
     log('2. 403 "GP data has not updated" → rate-limited, wait ~2hr or click "clear & refetch"', 'info');
-    log('3. Network error → check internet / VPN / Edge security settings', 'info');
+    log('3. Network error → check internet / VPN / browser security settings', 'info');
   } else {
     setStatus(`${anyCached ? 'Cached' : 'Live'} · ${total.toLocaleString()} satellites`, anyCached ? 'cached' : 'ok');
     log(`Complete: ${total.toLocaleString()} satellites loaded.`, 'ok');
