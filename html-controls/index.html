@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HTML Controls Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap');
-
   :root {
     --bg: #f0f2f6;
     --surface: #ffffff;
@@ -476,7 +477,7 @@
 
   /* ── 25. Canvas ── */
   canvas {
-    border-radius: 9px; display: block; width: 100%;
+    border-radius: 9px; display: block; width: 100%; height: 90px;
     background: var(--surface2); border: 1px solid var(--border);
     box-shadow: var(--shadow);
   }
@@ -496,13 +497,13 @@
     <span class="home-nav__arrow" aria-hidden="true">&#8592;</span>
     <span>axta tools</span>
   </a>
-  <span class="home-nav__meta">v1.0 · 2026-06-08</span>
+  <span class="home-nav__meta">v1.1 · 2026-06-11</span>
 </nav>
 
 <header>
   <div class="inner">
     <h1>HTML Controls<br>Field Guide</h1>
-    <p>25 native controls — every one you should know</p>
+    <p>25 essential form controls — native elements &amp; common composed patterns</p>
   </div>
 </header>
 
@@ -967,8 +968,18 @@
   var cv = document.getElementById('cv');
   var ctx = cv.getContext('2d');
   var mx = 0.5;
+  var cssW = 0, cssH = 0;
 
-  function resize(){ cv.width = cv.offsetWidth; }
+  // Scale the backing store by devicePixelRatio so the render is crisp on
+  // retina/HiDPI displays; draw in CSS-pixel coordinates via ctx transform.
+  function resize(){
+    var dpr = window.devicePixelRatio || 1;
+    cssW = cv.offsetWidth;
+    cssH = cv.offsetHeight;
+    cv.width  = Math.round(cssW * dpr);
+    cv.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
   resize();
   window.addEventListener('resize', resize);
 
@@ -984,7 +995,7 @@
 
   var t = 0;
   function frame(){
-    var W = cv.width, H = cv.height;
+    var W = cssW, H = cssH;   // draw in CSS pixels (ctx is dpr-scaled)
     ctx.clearRect(0,0,W,H);
     ctx.fillStyle='#e8ebf2'; ctx.fillRect(0,0,W,H);
     ctx.strokeStyle='rgba(178,186,208,0.55)'; ctx.lineWidth=1;

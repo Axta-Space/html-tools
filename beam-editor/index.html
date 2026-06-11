@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>GSO Beam · Globe V2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* ── FIX #1: All CSS custom properties use correct double-hyphen syntax ── */
   :root {
+    --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', monospace;
     --bg: #f5f5f0;
     --panel: #ffffff;
     --border: #d0cfc8;
@@ -22,7 +25,7 @@
     height: 100%; width: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     overflow: hidden;
     touch-action: none;
     user-select: none;
@@ -65,7 +68,7 @@
     width: 36px; height: 36px;
     background: var(--panel); border: 1px solid var(--border2);
     border-radius: 5px; font-size: 20px; font-weight: bold;
-    font-family: 'Courier New', monospace; color: var(--accent);
+    font-family: var(--font-mono); color: var(--accent);
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 1px 3px rgba(0,0,0,.1);
     -webkit-tap-highlight-color: transparent;
@@ -112,7 +115,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   #add-beam-btn:active { background: var(--track); }
-  /* FIX #15: proper disabled state via both class and attribute */
+  /* Disabled state expressed via both class and attribute */
   #add-beam-btn.disabled,
   #add-beam-btn[disabled] { color: var(--border2); pointer-events: none; }
 
@@ -134,6 +137,8 @@
     flex-shrink: 0; display: flex;
     border-top: 1px solid var(--border);
     background: var(--panel);
+    /* Keep the bottom controls clear of the iOS home indicator */
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
   .ctrl {
     flex: 1; display: flex; flex-direction: column; gap: 2px;
@@ -143,7 +148,7 @@
   .ctrl .lbl { font-size: 7px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
   .ctrl input[type=number] {
     width: 100%;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 16px; font-weight: bold;
     color: var(--accent); background: var(--bg);
     border: 1px solid var(--border); border-radius: 3px;
@@ -168,7 +173,7 @@
     <span class="home-nav__arrow" aria-hidden="true">&#8592;</span>
     <span>axta tools</span>
   </a>
-  <span class="home-nav__meta">v1.0 · 2026-06-08</span>
+  <span class="home-nav__meta">v1.1 · 2026-06-11</span>
 </nav>
 <div id="app">
   <header>
@@ -213,7 +218,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
-// ── FIX #13: Named constants — no magic numbers scattered inline ──────────────
+// ── Named constants ─────────────────────────────────────────────────────────
 const WGS84       = { a: 6378137.0, b: 6356752.3142 };
 const GSO_ALT_M   = 35786000;  // GEO orbit altitude, metres
 const D2R         = Math.PI / 180;
@@ -301,14 +306,14 @@ function elevSlant(satLon, lat, lon) {
   const φ = lat * D2R, λ = lon * D2R;
   const up = [Math.cos(φ)*Math.cos(λ), Math.cos(φ)*Math.sin(λ), Math.sin(φ)];
   return {
-    elev:    Math.asin(dot(norm(toSat), up)) * R2D,
+    // Clamp to [-1, 1] so float rounding can't push asin into NaN.
+    elev:    Math.asin(Math.max(-1, Math.min(1, dot(norm(toSat), up)))) * R2D,
     slantKm: Math.hypot(...toSat) / 1000
   };
 }
 
-// ── FIX #7 + deduplication: shared beam-local coordinate frame ───────────────
-// Extracted from both computeBeam and computeAxisTips to avoid code duplication
-// and to properly handle the near-polar Rodrigues fallback.
+// ── Shared beam-local coordinate frame ───────────────────────────────────────
+// Used by both computeBeam and computeAxisTips; handles the near-polar fallback.
 function beamFrame(satLon, boreLat, boreLon) {
   const satE    = lla2ecef(0, satLon, GSO_ALT_M);
   const boreE   = lla2ecef(boreLat, boreLon, 0);
@@ -318,7 +323,7 @@ function beamFrame(satLon, boreLat, boreLon) {
   const worldZ = [0, 0, 1];
   let northRaw = worldZ.map((v, i) => v - dot(worldZ, boreDir) * boreDir[i]);
 
-  // FIX #7: near-polar fallback — use world-Y and *also* project it properly
+  // Near-polar fallback — use world-Y, projected the same way
   if (Math.hypot(...northRaw) < 1e-6) {
     const worldY = [0, 1, 0];
     northRaw = worldY.map((v, i) => v - dot(worldY, boreDir) * boreDir[i]);
@@ -387,7 +392,7 @@ function computeAxisTips(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg, m
   });
 }
 
-// ── FIX #8: longitude normalisation to [−180, 180] ───────────────────────────
+// ── Longitude normalisation to [−180, 180] ───────────────────────────────────
 function wrapLon(lon) {
   lon = lon % 360;
   if (lon >  180) lon -= 360;
@@ -411,7 +416,6 @@ function hexToRgba(hex, a) {
 }
 
 // ── App state ─────────────────────────────────────────────────────────────────
-// FIX #13: renamed from 'global' (would shadow window.global in strict environments)
 const cfg  = { satLon: 33, minElev: 5 };
 let beams      = [];
 let selectedId = null;
@@ -424,9 +428,8 @@ let W, H, baseR, R, zoomScale = 1;
 
 const projection = d3.geoOrthographic().rotate([-33, -20]).clipAngle(90);
 
-// FIX #17: path is created once. projection is mutable, so the same path
-// instance stays valid after projection.rotate() / .scale() / .translate().
-// No more "path = d3.geoPath(projection)" scattered across the codebase.
+// Path is created once. The projection is mutable, so the same path instance
+// stays valid after projection.rotate() / .scale() / .translate().
 const geoPath = d3.geoPath(projection);
 
 const lyrSphere = svg.append('g');
@@ -438,7 +441,7 @@ const sphereEl  = lyrSphere.append('circle').attr('class', 'sphere');
 const gratEl    = lyrGrat.append('path').attr('class', 'graticule');
 let   landPaths = null;
 
-// ── FIX #16: rAF-throttled redraw ────────────────────────────────────────────
+// ── rAF-throttled redraw ─────────────────────────────────────────────────────
 let rafId       = null;
 let rafDragging = false;
 
@@ -479,8 +482,7 @@ function _redraw(dragging) {
       beam.svgEl.attr('d', '');
     }
 
-    // FIX #5/#6: exactly 2 tickEls per beam — major-axis line (index 0) and
-    // minor-axis line (index 1). No wasted elements, no redundant zeroing.
+    // Exactly 2 tickEls per beam — major-axis line (0) and minor-axis line (1).
     const tips = computeAxisTips(satLon, beam.boreLat, beam.boreLon,
                                  beam.major, beam.minor, beam.rot, minElev);
     [[0, 1], [2, 3]].forEach(([ai, bi], tickIdx) => {
@@ -520,7 +522,6 @@ function _redraw(dragging) {
 function applyZoom() {
   R = baseR * zoomScale;
   projection.translate([W/2, H/2]).scale(R);
-  // FIX #17: no geoPath reassignment needed
   scheduleRedraw();
 }
 
@@ -528,7 +529,7 @@ function applyZoom() {
 function addBeam(boreLat = 20, boreLon = null, major = null, minor = null, rot = null) {
   if (beams.length >= MAX_BEAMS) return;
   const prev = beams.length > 0 ? beams[beams.length - 1] : null;
-  // FIX #3: fallback uses cfg.satLon (live value) not a stale closure over 'global'
+  // Inherit from the previous beam, falling back to the live sat longitude.
   const inheritLon   = boreLon !== null ? boreLon : (prev ? prev.boreLon : cfg.satLon);
   const inheritMajor = major   !== null ? major   : (prev ? prev.major   : 2.0);
   const inheritMinor = minor   !== null ? minor   : (prev ? prev.minor   : 2.0);
@@ -543,7 +544,7 @@ function addBeam(boreLat = 20, boreLon = null, major = null, minor = null, rot =
     .attr('stroke', color)
     .datum({ id });
 
-  // FIX #5: exactly 2 tickEls — one for major axis, one for minor axis
+  // Exactly 2 tickEls — one for the major axis, one for the minor axis
   const tickEls = [0, 1].map(() =>
     lyrBeam.append('line')
       .attr('stroke',         color)
@@ -577,7 +578,6 @@ function syncInputs() {
   document.getElementById('sl-major').value = b ? b.major : 2.0;
   document.getElementById('sl-minor').value = b ? b.minor : 2.0;
   document.getElementById('sl-rot').value   = b ? b.rot   : 0;
-  // FIX #4: dead syncBwInput() removed — #sl-bw element never existed
 }
 
 // ── Beam list UI ──────────────────────────────────────────────────────────────
@@ -616,7 +616,7 @@ function renderBeamList() {
 
   const full = beams.length >= MAX_BEAMS;
   addBtn.textContent = full ? String(MAX_BEAMS) : '+';
-  // FIX #15: set both .disabled class AND the disabled attribute
+  // Set both the .disabled class and the disabled attribute
   addBtn.classList.toggle('disabled', full);
   addBtn.toggleAttribute('disabled', full);
 }
@@ -634,12 +634,12 @@ function pxToDeg(dpx, dpy) {
 }
 
 svg.on('mousedown touchstart', function(evt) {
-  // FIX #2: if 2 fingers are already down, let the pinch handler own it
+  // If 2 fingers are already down, let the pinch handler own it
   if (evt.touches && evt.touches.length === 2) return;
   evt.preventDefault();
 
   const src  = evt.touches ? evt.touches[0] : evt;
-  // FIX #10: offset by SVG bounding rect so coords are SVG-relative on mobile
+  // Offset by the SVG bounding rect so coords are SVG-relative on mobile
   const rect = svg.node().getBoundingClientRect();
   const cx   = src.clientX - rect.left;
   const cy   = src.clientY - rect.top;
@@ -664,7 +664,7 @@ svg.on('mousedown touchstart', function(evt) {
 
 svg.on('mousemove touchmove', function(evt) {
   if (!dragMode) return;
-  // FIX #2: don't process single-touch move while a pinch is active
+  // Don't process single-touch move while a pinch is active
   if (evt.touches && evt.touches.length === 2) return;
   evt.preventDefault();
 
@@ -678,11 +678,11 @@ svg.on('mousemove touchmove', function(evt) {
     if (!beam) return;
     const [dLat, dLon] = pxToDeg(cx - beamPx0[0], cy - beamPx0[1]);
     beam.boreLat = Math.max(-LAT_CLAMP, Math.min(LAT_CLAMP, boreLat0 - dLat));
-    beam.boreLon = wrapLon(boreLon0 + dLon);   // FIX #8
+    beam.boreLon = wrapLon(boreLon0 + dLon);
     scheduleRedraw(true);
 
   } else if (dragMode === 'globe') {
-    const sens = GLOBE_SENS / zoomScale;        // FIX #12: scale with zoom
+    const sens = GLOBE_SENS / zoomScale;        // scale drag sensitivity with zoom
     projection.rotate([
       rotOrigin[0] + (cx - rotStart[0]) * sens,
       rotOrigin[1] - (cy - rotStart[1]) * sens
@@ -703,7 +703,7 @@ svg.on('wheel', function(evt) {
   applyZoom();
 }, { passive: false });
 
-// ── FIX #2: Pinch zoom fully isolated — clears dragMode on 2-finger start ────
+// ── Pinch zoom — isolated; clears dragMode on 2-finger start ─────────────────
 svg.on('touchstart.pinch', function(evt) {
   if (evt.touches.length !== 2) return;
   evt.preventDefault();
@@ -735,7 +735,7 @@ document.getElementById('btn-zo').addEventListener('click', () => {
   zoomScale = Math.max(ZOOM_MIN, zoomScale / ZOOM_BTN); applyZoom();
 });
 
-// ── Keyboard nudge (FIX #8: lon wrap) ────────────────────────────────────────
+// ── Keyboard nudge ───────────────────────────────────────────────────────────
 document.addEventListener('keydown', function(evt) {
   const beam = selectedBeam();
   if (!beam) return;
@@ -756,7 +756,7 @@ document.addEventListener('keydown', function(evt) {
 // ── Controls ──────────────────────────────────────────────────────────────────
 document.getElementById('add-beam-btn').addEventListener('click', () => addBeam());
 
-// FIX #11: bind both 'input' (live) and 'change' (blur/Enter) for each control
+// Bind both 'input' (live) and 'change' (blur/Enter) for each control
 function bindNumber(id, min, max, handler) {
   const el = document.getElementById(id);
   function handle() {
@@ -771,10 +771,9 @@ function bindNumber(id, min, max, handler) {
 bindNumber('sl-satlon', -180, 180, v => {
   const delta = v - cfg.satLon;
   cfg.satLon  = v;
-  beams.forEach(b => { b.boreLon = wrapLon(b.boreLon + delta); }); // FIX #8
+  beams.forEach(b => { b.boreLon = wrapLon(b.boreLon + delta); });
   const rot = projection.rotate();
   projection.rotate([rot[0] - delta, rot[1]]);
-  // FIX #17: no geoPath reassignment
   scheduleRedraw();
 });
 
@@ -812,7 +811,6 @@ async function init() {
   }
 
   projection.rotate([-cfg.satLon, -20]);
-  // FIX #17: no geoPath reassignment
   scheduleRedraw();
 }
 
