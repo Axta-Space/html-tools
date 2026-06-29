@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
-import { computeBeam, computeAxisTips, lla2ecef, wrapLon, GSO_ALT_M, LAT_CLAMP } from '../lib/geodesy.js'
+import { computeBeamAndTips, wrapLon, LAT_CLAMP } from '../lib/geodesy.js'
 import { hexToRgba } from '../lib/colors.js'
 
 const GLOBE_RATIO = 0.47
@@ -11,7 +11,18 @@ const ZOOM_MAX    = 8
 const ZOOM_WHEEL  = 1.12
 const ZOOM_BTN    = 1.25
 
-export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDragEnd, onUpdateCfgSatLon }) {
+function getXY(evt, svgEl) {
+  const src  = evt.touches ? evt.touches[0] : evt
+  const rect = svgEl.getBoundingClientRect()
+  return [src.clientX - rect.left, src.clientY - rect.top]
+}
+
+function pxToDeg(dpx, dpy, scale) {
+  const R2D = 180 / Math.PI
+  return [dpy / scale * R2D, dpx / scale * R2D]
+}
+
+export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamRepoint }) {
   const wrapRef = useRef(null)
   const svgRef  = useRef(null)
 
@@ -41,8 +52,8 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
   stateRef.current = { cfg, beams, selectedId }
 
   // Always-current callbacks
-  const cbRef = useRef({ onSelect, onBeamDragEnd, onUpdateCfgSatLon })
-  cbRef.current = { onSelect, onBeamDragEnd, onUpdateCfgSatLon }
+  const cbRef = useRef({ onSelect, onBeamRepoint })
+  cbRef.current = { onSelect, onBeamRepoint }
 
   // ── Redraw ─────────────────────────────────────────────────────────────────
   function redraw(dragging = false) {
@@ -67,7 +78,7 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
         boreLon = g.drag.boreLon
       }
 
-      const coords = computeBeam(c.satLon, boreLat, boreLon, beam.major, beam.minor, beam.rot, c.minElev)
+      const { coords, tips } = computeBeamAndTips(c.satLon, boreLat, boreLon, beam.major, beam.minor, beam.rot, c.minElev)
       els.svgEl
         .attr('fill',         hexToRgba(beam.color, isSel ? 0.18 : 0.08))
         .attr('stroke',       beam.color)
@@ -82,7 +93,6 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
         els.svgEl.attr('d', '')
       }
 
-      const tips = computeAxisTips(c.satLon, boreLat, boreLon, beam.major, beam.minor, beam.rot, c.minElev)
       ;[[0, 1], [2, 3]].forEach(([ai, bi], tickIdx) => {
         const tipA = tips[ai], tipB = tips[bi]
         const el   = els.tickEls[tickIdx]
@@ -167,7 +177,7 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
     g.H = wrap.clientHeight
     g.baseR = Math.min(g.W, g.H) * GLOBE_RATIO
 
-    const projection = d3.geoOrthographic().rotate([-33, -20]).clipAngle(90)
+    const projection = d3.geoOrthographic().clipAngle(90)
     const geoPath    = d3.geoPath(projection)
     g.projection = projection
     g.geoPath    = geoPath
@@ -211,26 +221,13 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
     }
     window.addEventListener('resize', onResize)
 
-    // ── Pointer helpers ───────────────────────────────────────────────────────
-    function getXY(evt) {
-      const src  = evt.touches ? evt.touches[0] : evt
-      const rect = svgEl.getBoundingClientRect()
-      return [src.clientX - rect.left, src.clientY - rect.top]
-    }
-
-    function pxToDeg(dpx, dpy) {
-      const s = projection.scale()
-      const R2D = 180 / Math.PI
-      return [dpy / s * R2D, dpx / s * R2D]
-    }
-
     // ── Drag ─────────────────────────────────────────────────────────────────
     svg.on('mousedown touchstart', function(evt) {
       if (evt.touches && evt.touches.length === 2) return
       evt.preventDefault()
 
-      const [cx, cy] = getXY(evt)
-      const { beams: bs, selectedId: selId } = stateRef.current
+      const [cx, cy] = getXY(evt, svgEl)
+      const { beams: bs } = stateRef.current
       const src = evt.touches ? evt.touches[0] : evt
       const target = document.elementFromPoint(src.clientX, src.clientY)
       const hitBeam = bs.find(b => {
@@ -266,10 +263,10 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
       if (evt.touches && evt.touches.length === 2) return
       evt.preventDefault()
 
-      const [cx, cy] = getXY(evt)
+      const [cx, cy] = getXY(evt, svgEl)
 
       if (g.drag.mode === 'beam') {
-        const [dLat, dLon] = pxToDeg(cx - g.drag.px0[0], cy - g.drag.px0[1])
+        const [dLat, dLon] = pxToDeg(cx - g.drag.px0[0], cy - g.drag.px0[1], g.projection.scale())
         g.drag.boreLat = Math.max(-LAT_CLAMP, Math.min(LAT_CLAMP, g.drag.boreLat0 - dLat))
         g.drag.boreLon = wrapLon(g.drag.boreLon0 + dLon)
         scheduleRedraw(true)
@@ -284,9 +281,12 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
       }
     }, { passive: false })
 
-    svg.on('mouseup mouseleave touchend touchcancel', function() {
-      if (g.drag && g.drag.mode === 'beam') {
-        cbRef.current.onBeamDragEnd(g.drag.beamId, g.drag.boreLat, g.drag.boreLon)
+    svg.on('mouseup mouseleave touchend touchcancel', function(evt) {
+      if (!g.drag) return
+      // mouseleave during a beam drag: keep dragging until mouseup
+      if (evt.type === 'mouseleave' && g.drag.mode === 'beam') return
+      if (g.drag.mode === 'beam') {
+        cbRef.current.onBeamRepoint(g.drag.beamId, g.drag.boreLat, g.drag.boreLon)
       }
       g.drag = null
       scheduleRedraw(false)
@@ -335,7 +335,6 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
       if (!ARROWS[evt.key]) return
       evt.preventDefault()
       const step = (evt.shiftKey ? 10 : 1) * 0.1
-      const R2D = 180 / Math.PI
       let lat = beam.boreLat, lon = beam.boreLon
       switch (evt.key) {
         case 'ArrowUp':    lat = Math.max(-LAT_CLAMP, Math.min(LAT_CLAMP, lat + step)); break
@@ -343,7 +342,7 @@ export default function GlobeCanvas({ cfg, beams, selectedId, onSelect, onBeamDr
         case 'ArrowRight': lon = wrapLon(lon + step); break
         case 'ArrowLeft':  lon = wrapLon(lon - step); break
       }
-      cbRef.current.onBeamDragEnd(beam.id, lat, lon)
+      cbRef.current.onBeamRepoint(beam.id, lat, lon)
     }
     document.addEventListener('keydown', onKeyDown)
 

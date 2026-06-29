@@ -97,13 +97,16 @@ export function beamFrame(satLon, boreLat, boreLon) {
   return { satE, boreDir, north_hat, east_hat };
 }
 
-export function computeBeam(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg, minElev) {
+// Shared setup for computeBeam / computeAxisTips / computeBeamAndTips
+function beamAxes(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg) {
   const { satE, boreDir, north_hat, east_hat } = beamFrame(satLon, boreLat, boreLon);
   const rotR = rotDeg * D2R, cosR = Math.cos(rotR), sinR = Math.sin(rotR);
   const major_hat = east_hat.map((_, i) =>  cosR * east_hat[i] + sinR * north_hat[i]);
   const minor_hat = east_hat.map((_, i) => -sinR * east_hat[i] + cosR * north_hat[i]);
-  const a = majorDeg / 2 * D2R, b = minorDeg / 2 * D2R;
+  return { satE, boreDir, major_hat, minor_hat, a: majorDeg / 2 * D2R, b: minorDeg / 2 * D2R };
+}
 
+function buildCoords(satE, boreDir, major_hat, minor_hat, a, b, minElev) {
   const raw = [];
   for (let i = 0; i < N_VERTS; i++) {
     const phi = 2 * Math.PI * i / N_VERTS;
@@ -116,9 +119,7 @@ export function computeBeam(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg
     const [lat, lon] = ecef2lla(...hit);
     raw.push(elevAtLatLon(satE, lat, lon) >= minElev ? [lon, lat] : null);
   }
-
   if (raw.every(v => v === null)) return null;
-
   const coords = [];
   for (let i = 0; i < N_VERTS; i++) {
     const cur  = raw[i];
@@ -131,13 +132,7 @@ export function computeBeam(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg
   return coords;
 }
 
-export function computeAxisTips(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg, minElev) {
-  const { satE, boreDir, north_hat, east_hat } = beamFrame(satLon, boreLat, boreLon);
-  const rotR = rotDeg * D2R, cosR = Math.cos(rotR), sinR = Math.sin(rotR);
-  const major_hat = east_hat.map((_, i) =>  cosR * east_hat[i] + sinR * north_hat[i]);
-  const minor_hat = east_hat.map((_, i) => -sinR * east_hat[i] + cosR * north_hat[i]);
-  const a = majorDeg / 2 * D2R, b = minorDeg / 2 * D2R;
-
+function buildTips(satE, boreDir, major_hat, minor_hat, a, b, minElev) {
   return [
     [major_hat,              a],
     [major_hat.map(v => -v), a],
@@ -150,6 +145,24 @@ export function computeAxisTips(satLon, boreLat, boreLon, majorDeg, minorDeg, ro
     const [lat, lon] = ecef2lla(...hit);
     return elevAtLatLon(satE, lat, lon) >= minElev ? [lon, lat] : null;
   });
+}
+
+export function computeBeam(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg, minElev) {
+  const { satE, boreDir, major_hat, minor_hat, a, b } = beamAxes(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg);
+  return buildCoords(satE, boreDir, major_hat, minor_hat, a, b, minElev);
+}
+
+export function computeAxisTips(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg, minElev) {
+  const { satE, boreDir, major_hat, minor_hat, a, b } = beamAxes(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg);
+  return buildTips(satE, boreDir, major_hat, minor_hat, a, b, minElev);
+}
+
+export function computeBeamAndTips(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg, minElev) {
+  const { satE, boreDir, major_hat, minor_hat, a, b } = beamAxes(satLon, boreLat, boreLon, majorDeg, minorDeg, rotDeg);
+  return {
+    coords: buildCoords(satE, boreDir, major_hat, minor_hat, a, b, minElev),
+    tips:   buildTips(satE, boreDir, major_hat, minor_hat, a, b, minElev),
+  };
 }
 
 export function wrapLon(lon) {
