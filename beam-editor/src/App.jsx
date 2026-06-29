@@ -7,7 +7,7 @@ import BeamList from './components/BeamList.jsx'
 import InfoBar from './components/InfoBar.jsx'
 import ControlPanel from './components/ControlPanel.jsx'
 
-const MAX_BEAMS = 16
+export const MAX_BEAMS = 16
 
 const initialState = {
   cfg:        { satLon: 33, minElev: 5 },
@@ -82,7 +82,7 @@ export default function App() {
     dispatch({ type: 'UPDATE_BEAM', id, patch })
   }
 
-  function handleBeamDragEnd(id, boreLat, boreLon) {
+  function handleBeamRepoint(id, boreLat, boreLon) {
     dispatch({ type: 'UPDATE_BEAM', id, patch: { boreLat, boreLon } })
   }
 
@@ -100,8 +100,7 @@ export default function App() {
         beams={beams}
         selectedId={selectedId}
         onSelect={id => dispatch({ type: 'SELECT_BEAM', id })}
-        onBeamDragEnd={handleBeamDragEnd}
-        onUpdateCfgSatLon={v => dispatch({ type: 'SET_SAT_LON', value: v })}
+        onBeamRepoint={handleBeamRepoint}
       />
 
       <BeamList

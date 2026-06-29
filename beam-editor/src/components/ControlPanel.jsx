@@ -1,11 +1,16 @@
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 
 function NumberInput({ label, value, min, max, step, onChange }) {
   const ref = useRef(null)
 
+  useEffect(() => {
+    if (ref.current && document.activeElement !== ref.current) {
+      ref.current.value = value
+    }
+  }, [value])
+
   function commit(raw) {
     const v = Math.max(min, Math.min(max, +raw))
-    if (ref.current) ref.current.value = v
     onChange(v)
   }
 
@@ -19,7 +24,6 @@ function NumberInput({ label, value, min, max, step, onChange }) {
         max={max}
         step={step}
         defaultValue={value}
-        key={value}
         onInput={e => commit(e.target.value)}
         onChange={e => commit(e.target.value)}
       />

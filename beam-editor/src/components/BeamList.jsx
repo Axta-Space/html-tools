@@ -1,4 +1,4 @@
-const MAX_BEAMS = 16
+import { MAX_BEAMS } from '../App.jsx'
 
 export default function BeamList({ beams, selectedId, onSelect, onAdd, onDelete }) {
   const full = beams.length >= MAX_BEAMS
