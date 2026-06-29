@@ -24,13 +24,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: beam-editor/package-lock.json
+
+      - name: Build beam-editor
+        run: |
+          cd beam-editor
+          npm ci
+          npm run build
+
+      - name: Stage site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r Sat-Tracker _site/ 2>/dev/null || true
+          cp -r html-controls _site/ 2>/dev/null || true
+          cp sw.js _site/ 2>/dev/null || true
+          cp manifest.json _site/ 2>/dev/null || true
+          cp -r beam-editor/dist _site/beam-editor
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
