@@ -29,7 +29,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: beam-editor/package-lock.json
+          cache-dependency-path: |
+            beam-editor/package-lock.json
+            Sat-Tracker/package-lock.json
 
       - name: Build beam-editor
         run: |
@@ -37,15 +39,21 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build Sat-Tracker
+        run: |
+          cd Sat-Tracker
+          npm ci
+          npm run build
+
       - name: Stage site
         run: |
           mkdir -p _site
           cp index.html _site/
-          cp -r Sat-Tracker _site/ 2>/dev/null || true
           cp -r html-controls _site/ 2>/dev/null || true
           cp sw.js _site/ 2>/dev/null || true
           cp manifest.json _site/ 2>/dev/null || true
           cp -r beam-editor/dist _site/beam-editor
+          cp -r Sat-Tracker/dist _site/Sat-Tracker
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
